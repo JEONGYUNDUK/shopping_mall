@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -10,6 +11,26 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine, get_db
 from app.models import Base, Product
 from app.schemas import ProductResponse
+
+
+def _build_cors_origins() -> list[str]:
+    """Return local and deployed frontend origins allowed to call the API."""
+    default_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://blissful-flow-production-8ffb.up.railway.app",
+    ]
+    configured_origins = os.getenv("FRONTEND_URLS", "")
+
+    if not configured_origins.strip():
+        return default_origins
+
+    extra_origins = [
+        origin.strip().rstrip("/")
+        for origin in configured_origins.split(",")
+        if origin.strip()
+    ]
+    return list(dict.fromkeys(default_origins + extra_origins))
 
 
 SEED_PRODUCTS = [
@@ -80,10 +101,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_build_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -19,8 +19,11 @@ Relevant file:
 
 ## 2. Frontend environment variables
 
-The frontend reads `NEXT_PUBLIC_API_URL` and falls back to
-`http://localhost:8000` when the variable is missing.
+The frontend reads `NEXT_PUBLIC_API_URL` first.
+
+- Local fallback: `http://127.0.0.1:8000`
+- Production fallback in this project:
+  `https://shoppingmall-production-a89a.up.railway.app`
 
 Relevant files:
 
@@ -32,7 +35,7 @@ Relevant files:
 Create `frontend/.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
 ### Production deployment
@@ -41,8 +44,15 @@ Create `frontend/.env.production` locally if you want a production reference,
 or set the same key directly in your hosting platform:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-backend-domain.up.railway.app
+NEXT_PUBLIC_API_URL=https://shoppingmall-production-a89a.up.railway.app
 ```
+
+### Current Railway deployment values
+
+- Frontend URL:
+  `https://blissful-flow-production-8ffb.up.railway.app`
+- Backend URL:
+  `https://shoppingmall-production-a89a.up.railway.app`
 
 ## 3. GitHub first push
 
@@ -80,6 +90,10 @@ Recommended backend variables:
 - `DATABASE_URL`
   - Usually available automatically after attaching a Railway PostgreSQL
     service.
+- `FRONTEND_URLS`
+  - Optional comma-separated allowlist for CORS.
+  - Example:
+    `https://blissful-flow-production-8ffb.up.railway.app`
 - `PORT`
   - Railway injects this automatically at runtime.
 
@@ -106,7 +120,7 @@ Recommended backend variables:
 4. In the Frontend service Variables tab, set:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-backend-domain.up.railway.app
+NEXT_PUBLIC_API_URL=https://shoppingmall-production-a89a.up.railway.app
 ```
 
 ## 5. Deployment order

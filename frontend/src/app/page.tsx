@@ -7,8 +7,28 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { ProductCard } from "@/components/product/product-card";
 import { Product } from "@/lib/products";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
+const PRODUCTION_API_URL =
+  "https://shoppingmall-production-a89a.up.railway.app";
+
+const getApiBaseUrl = (): string => {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "");
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  if (typeof window !== "undefined") {
+    const { protocol, hostname } = window.location;
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    if (isLocalHost) {
+      return `${protocol}//${hostname}:8000`;
+    }
+
+    return PRODUCTION_API_URL;
+  }
+
+  return PRODUCTION_API_URL;
+};
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -20,7 +40,7 @@ export default function HomePage() {
 
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/products`);
+        const response = await fetch(`${getApiBaseUrl()}/api/products`);
 
         if (!response.ok) {
           throw new Error("상품 데이터를 불러오지 못했습니다.");
