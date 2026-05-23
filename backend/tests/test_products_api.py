@@ -44,7 +44,7 @@ class ProductApiTests(unittest.TestCase):
         self.assertEqual(len(data), 3)
         self.assertEqual(
             [product["name"] for product in data],
-            ["티셔츠", "청바지", "모자"],
+            ["Atelier Tote 32", "Heritage Handbag", "Signature Wallet"],
         )
 
     def test_get_product_detail_returns_single_product(self) -> None:

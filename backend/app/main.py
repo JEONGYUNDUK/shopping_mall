@@ -14,25 +14,25 @@ from app.schemas import ProductResponse
 
 SEED_PRODUCTS = [
     {
-        "name": "티셔츠",
-        "price": 30000,
-        "description": "편하게 입기 좋은 기본 반팔 티셔츠입니다.",
-        "image_url": "https://example.com/images/tshirt.jpg",
-        "stock": 100,
+        "name": "Atelier Tote 32",
+        "price": 890000,
+        "description": "가볍게 흐르는 실루엣과 단정한 구조를 함께 담아, 일상에 자연스럽게 스며드는 수제 레더 토트백입니다.",
+        "image_url": "https://example.com/images/atelier-tote-32.jpg",
+        "stock": 10,
     },
     {
-        "name": "청바지",
-        "price": 50000,
-        "description": "데일리 코디에 잘 어울리는 클래식 청바지입니다.",
-        "image_url": "https://example.com/images/jeans.jpg",
-        "stock": 60,
+        "name": "Heritage Handbag",
+        "price": 1240000,
+        "description": "손에 쥐었을 때의 균형감과 곡선의 흐름이 아름다운, 차분한 존재감의 수제 핸드백입니다.",
+        "image_url": "https://example.com/images/heritage-handbag.jpg",
+        "stock": 7,
     },
     {
-        "name": "모자",
-        "price": 20000,
-        "description": "가볍게 착용하기 좋은 캐주얼 모자입니다.",
-        "image_url": "https://example.com/images/cap.jpg",
-        "stock": 80,
+        "name": "Signature Wallet",
+        "price": 460000,
+        "description": "손에 편안하게 감기고 가장자리 마감이 돋보이는, 오래 사용할수록 깊이가 더해지는 컴팩트 월렛입니다.",
+        "image_url": "https://example.com/images/signature-wallet.jpg",
+        "stock": 16,
     },
 ]
 
@@ -41,12 +41,25 @@ def seed_products_if_empty() -> None:
     """Insert sample products once so the API has useful local test data."""
     db = SessionLocal()
     try:
-        has_products = db.scalar(select(Product.id).limit(1))
-        if has_products is not None:
+        products = db.scalars(select(Product).order_by(Product.id)).all()
+        if not products:
+            db.add_all([Product(**product_data) for product_data in SEED_PRODUCTS])
+            db.commit()
             return
 
-        db.add_all([Product(**product_data) for product_data in SEED_PRODUCTS])
-        db.commit()
+        legacy_product_names = {"티셔츠", "청바지", "모자"}
+        existing_names = {product.name for product in products}
+        previous_demo_names = {"Atelier Tote", "Signature Wallet", "Saddle Belt"}
+
+        # Replace early apparel demo data with leather-goods demo data so the
+        # local storefront keeps matching the current product direction.
+        if existing_names == legacy_product_names or existing_names == previous_demo_names:
+            for product in products:
+                db.delete(product)
+
+            db.flush()
+            db.add_all([Product(**product_data) for product_data in SEED_PRODUCTS])
+            db.commit()
     finally:
         db.close()
 
