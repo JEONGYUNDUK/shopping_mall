@@ -25,24 +25,28 @@ const normalizeApiUrl = (value?: string): string | null => {
   }
 };
 
-const getApiBaseUrl = (): string => {
-  const configuredUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
-  if (configuredUrl) {
-    return configuredUrl;
-  }
+const getApiBaseUrlCandidates = (): string[] => {
+  const candidates: string[] = [];
+  const addCandidate = (value: string | null) => {
+    if (value && !candidates.includes(value)) {
+      candidates.push(value);
+    }
+  };
+
+  addCandidate(normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL));
 
   if (typeof window !== "undefined") {
     const { protocol, hostname } = window.location;
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
     if (isLocalHost) {
-      return `${protocol}//${hostname}:${LOCAL_API_PORT}`;
+      addCandidate(`${protocol}//${hostname}:${LOCAL_API_PORT}`);
     }
-
-    return PRODUCTION_API_URL;
   }
 
-  return PRODUCTION_API_URL;
+  addCandidate(PRODUCTION_API_URL);
+
+  return candidates;
 };
 
 export default function HomePage() {
@@ -54,19 +58,35 @@ export default function HomePage() {
     let isMounted = true;
 
     const fetchProducts = async () => {
+      let lastError: Error | null = null;
+
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/products`);
+        for (const apiBaseUrl of getApiBaseUrlCandidates()) {
+          try {
+            const response = await fetch(`${apiBaseUrl}/api/products`);
 
-        if (!response.ok) {
-          throw new Error("상품 데이터를 불러오지 못했습니다.");
+            if (!response.ok) {
+              lastError = new Error("상품 데이터를 불러오지 못했습니다.");
+              continue;
+            }
+
+            const data: Product[] = await response.json();
+
+            if (isMounted) {
+              setProducts(data);
+              setError(null);
+            }
+
+            return;
+          } catch (candidateError) {
+            lastError =
+              candidateError instanceof Error
+                ? candidateError
+                : new Error("알 수 없는 오류가 발생했습니다.");
+          }
         }
 
-        const data: Product[] = await response.json();
-
-        if (isMounted) {
-          setProducts(data);
-          setError(null);
-        }
+        throw lastError ?? new Error("상품 데이터를 불러오지 못했습니다.");
       } catch (fetchError) {
         if (isMounted) {
           setError(
