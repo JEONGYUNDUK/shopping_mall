@@ -9,9 +9,24 @@ import { Product } from "@/lib/products";
 
 const PRODUCTION_API_URL =
   "https://shoppingmall-production-a89a.up.railway.app";
+const LOCAL_API_PORT = "8000";
+
+const normalizeApiUrl = (value?: string): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const sanitizedValue = value.trim().replace(/\s+/g, "").replace(/\/$/, "");
+
+  try {
+    return new URL(sanitizedValue).toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+};
 
 const getApiBaseUrl = (): string => {
-  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "");
+  const configuredUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
   if (configuredUrl) {
     return configuredUrl;
   }
@@ -21,7 +36,7 @@ const getApiBaseUrl = (): string => {
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
     if (isLocalHost) {
-      return `${protocol}//${hostname}:8000`;
+      return `${protocol}//${hostname}:${LOCAL_API_PORT}`;
     }
 
     return PRODUCTION_API_URL;
